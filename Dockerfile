@@ -1,4 +1,4 @@
-FROM rt106/rt106-datastore-api:latest
+FROM rt106/rt106-datastore:latest
 
 # install dependencies
 USER root
