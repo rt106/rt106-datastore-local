@@ -1,3 +1,5 @@
+# Copyright (c) General Electric Company, 2017.  All rights reserved.
+
 # Prototype code for testing dataServer.py
 
 import unittest,json,requests,uuid,tarfile,glob,os,logging

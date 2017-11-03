@@ -1,6 +1,8 @@
 # Datastore-Local
 [![Build Status](http://ideker.crd.ge.com:8888/buildStatus/icon?job=rt106/rt106-datastore-local/master)](http://ideker.crd.ge.com:8888/job/rt106/job/rt106-data-local/job/master/)
 
+_Copyright (c) General Electric Company, 2017.  All rights reserved._
+
 Local storage implementation of a Rt 106 datastore.  This is a simple datastore using a directory structure on the filesystem to manage data. This datastore is geared for small, simple deployments. It provides a simple mechanism to wrap or ingest pre-existing data into Rt 106.  The rt106-datastore REST API is used to serve the data to applications and algorithms.
 
 ### Local filesystem organization
