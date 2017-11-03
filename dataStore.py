@@ -266,7 +266,8 @@ class DataStore:
     def get_instance(self,path,format):
         logging.debug('get_instance(), path=%s  format=%s' % (path,format))
         path = self.data_path + '/' + path
-        if format != 'DICOM' and format != 'tif' and format != 'tiff16':
+        valid_formats = ['DICOM', 'tif', 'tiff16', 'csv']
+        if format not in valid_formats:
             logging.error('invalid format - %s' % format)
             abort(400)
 
@@ -289,7 +290,8 @@ class DataStore:
         # upload_path is merely the directory.  It is OK if it already exists.
         if not os.path.exists(upload_path):
             os.makedirs(upload_path)
-        if format != 'DICOM' and format != 'tif' and format != 'tiff16':
+        valid_formats = ['DICOM', 'tif', 'tiff16', 'csv']
+        if format not in valid_formats:
             logging.error('invalid format - %s' % format)
             abort(400)
         file = request.files['file']
@@ -307,7 +309,8 @@ class DataStore:
         upload_path = self.data_path + '/' + upload_path
         if not os.path.exists(upload_path):
             os.makedirs(upload_path)
-        if format != 'DICOM' and format != 'tif' and format != 'tiff16':
+        valid_formats = ['DICOM', 'tif', 'tiff16', 'csv']
+        if format not in valid_formats:
             logging.error('invalid format - %s' % format)
             abort(400)
         file = request.files['file']
@@ -474,6 +477,18 @@ class DataStore:
             # Create the path location if it does not exist.
             os.makedirs(root_path)
         return make_response(jsonify(path))
+
+    # Get the full path with image file names of the result with given pipelineid and execid.
+    def get_result_image_path(self, slide, region, pipelineid, execid):
+        logging.debug('get_result_image_path(), slide=%s region=%s pipelineid=%s execid=%s' % (slide, region, pipelineid, execid))
+        path = '/Slides/%s/%s/%s/%s' % (slide, region, pipelineid, execid)
+        root_path = '%s%s' % (self.data_path, path)
+        image_paths = []
+        for p in glob.glob(root_path + '/*'):
+            if os.path.isfile(p):
+                p = p[(p.find(self.data_path) + len(self.data_path)):]
+                image_paths.append(p)
+        return make_response(jsonify(image_paths))
 
     # Get the image for a given path
     def get_pathology_image(self,path,format):
