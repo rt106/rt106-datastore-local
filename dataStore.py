@@ -247,7 +247,7 @@ class DataStore:
         upload_path = upload_path[(upload_path.find(self.data_path) + len(self.data_path)):]
         return make_response(jsonify({'path': upload_path}))
 
-    # Get the type of a given instance, eg, 'tiff16', 'DICOM', 'csv', 'JPEG' etc.
+    # Get the type of a given instance, eg, 'tiff16', 'DICOM', 'csv', 'jpeg' etc.
     def get_instance_type(self,path):
         logging.debug('get_instance_type(), path=%s' % path)
         path = self.data_path + '/' + path
@@ -255,7 +255,7 @@ class DataStore:
             logging.error('invalid instance - %s' %  path)
             abort(404)
         type = None
-        supported_types = ['tiff16', 'csv', 'JPEG']
+        supported_types = ['tiff', 'tiff16', 'csv', 'jpeg']
         filename, extension = os.path.splitext(path)
         type = extension[1:].lower()
         if type == 'tif' or type == 'tiff':
@@ -268,12 +268,12 @@ class DataStore:
     def get_instance(self,path,format):
         logging.debug('get_instance(), path=%s  format=%s' % (path,format))
         path = self.data_path + '/' + path
-        valid_formats = ['DICOM', 'tif', 'tiff16', 'csv']
-        if format not in valid_formats:
+        valid_formats = ['dicom', 'tif', 'tiff', 'tiff16', 'csv']
+        if format.lower() not in valid_formats:
             logging.error('invalid format - %s' % format)
             abort(400)
 
-        if format == 'DICOM':
+        if format.lower() == 'dicom':
             if TEST_ERROR :
                 if 'pat002' in path and 'MRDC.5' in path:    # NOSONAR
                     path = path + '.error_test'
@@ -292,8 +292,8 @@ class DataStore:
         # upload_path is merely the directory.  It is OK if it already exists.
         if not os.path.exists(upload_path):
             os.makedirs(upload_path)
-        valid_formats = ['DICOM', 'tif', 'tiff16', 'csv']
-        if format not in valid_formats:
+        valid_formats = ['dicom', 'tif', 'tiff', 'tiff16', 'csv']
+        if format.lower() not in valid_formats:
             logging.error('invalid format - %s' % format)
             abort(400)
         file = request.files['file']
@@ -311,8 +311,8 @@ class DataStore:
         upload_path = self.data_path + '/' + upload_path
         if not os.path.exists(upload_path):
             os.makedirs(upload_path)
-        valid_formats = ['DICOM', 'tif', 'tiff16', 'csv']
-        if format not in valid_formats:
+        valid_formats = ['dicom', 'tif', 'tiff', 'tiff16', 'csv']
+        if format.lower() not in valid_formats:
             logging.error('invalid format - %s' % format)
             abort(400)
         file = request.files['file']
@@ -465,6 +465,7 @@ class DataStore:
                 logging.error('get_result_format(), file=%s' % p)
                 filename, extension = os.path.splitext(p)
                 type = extension[1:].lower()
+                # Need to improve this by determining whether the image is tiff16 vs. tiff.
                 if type == 'tif' or type == 'tiff':
                     type = 'tiff16'
                 types.append(type)
