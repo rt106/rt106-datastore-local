@@ -6,12 +6,12 @@
 
 import glob, logging, os, sys, uuid, time
 import tarfile, shutil, weakref, threading, hashlib
-import urlparse, json, requests
+import json, requests
 import boto3, botocore
-import dicom
+import pydicom
 
 from logging.handlers import RotatingFileHandler
-from urlparse import urlparse
+from urllib.parse import urlparse
 from flask import Flask, jsonify, abort, request, make_response, send_file
 from flask_cors import CORS, cross_origin
 

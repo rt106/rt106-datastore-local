@@ -7,11 +7,11 @@ if test ${DOWNLOAD_RAD_DEMO_DATA:-off} = 'on' || test ${DOWNLOAD_RAD_DEMO_DATA:-
 fi
 
 if test ${TEST:--false} = 'coverage'; then
-  python /rt106/dataServer.py &
+  python3 /rt106/dataServer.py &
   py.test --cov-report term --cov=. testDataServer.py
   #py.test --cov-report html --cov=. testDataServer.py
   #mv htmlcov /data
 else
-  python /rt106/dataServer.py
+  python3 /rt106/dataServer.py
 fi
 
