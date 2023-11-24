@@ -197,6 +197,12 @@ class DataStore:
        path = '/Patients/%s/Results/%s/%s/Imaging/%s' % (patient,pipeline,execid,study)
        return make_response(jsonify({'path':path}))
 
+    # Get the path to upload a series
+    def get_uploading_path_pipeline(self,patient,pipeline,step,tag,study,series):
+       logging.debug('get_uploading_path_pipeline(), patient=%s pipeline=%s step=%s tag=%s study=%s series=%s' % (patient,pipeline,step,tag,study,series))
+       path = '/Patients/%s/Results/Pipeline/%s/Step/%s/Tag/%s/Imaging/%s/%s' % (patient,pipeline,step,tag,study,series)
+       return make_response(jsonify({'path':path}))
+
     # Routine for downloading a series.
     def retrieve_series(self,path,format):
         logging.debug('retrieve_series(), path=%s  format=%s' % (path,format))
