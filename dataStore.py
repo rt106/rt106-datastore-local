@@ -191,6 +191,25 @@ class DataStore:
             paths.append(p)
         return make_response(jsonify({'files':files, 'paths':paths}))
 
+    # Get the result executions for algorithm or pipeline.
+    def get_result_executions(self, patient):
+        logging.debug('get_result_executions(), patient=%s' % (patient))
+
+        # Make sure directory structure has: <root>/Patients/<patient>/Results/Executions.  If not, then error.
+        exec_dir =  '%s/Patients/%s/Results/Executions' % (self.data_path,patient)
+        logging.debug(exec_dir)
+        if not os.path.isdir(exec_dir) :
+            logging.error('invalid results path - %s' % (exec_dir))
+            abort(404)
+
+        # Find the subdirectories under exec_dir and organize these in a JSON structure.
+        execids = os.listdir(exec_dir)
+        return make_response(jsonify({'execids':execids}))
+
+
+
+
+
     # Get the path to upload a series
     def get_uploading_path(self,patient,pipeline,execid,study):
        logging.debug('get_uploading_path(), patient=%s pipeline_id=%s exec_id=%s study=%s' % (patient,pipeline,execid,study))
@@ -198,10 +217,15 @@ class DataStore:
        return make_response(jsonify({'path':path}))
 
     # Get the path to upload a series
-    def get_uploading_path_pipeline(self,patient,pipeline,step,tag,study,series):
-       logging.debug('get_uploading_path_pipeline(), patient=%s pipeline=%s step=%s tag=%s study=%s series=%s' % (patient,pipeline,step,tag,study,series))
-       path = '/Patients/%s/Results/Pipeline/%s/Step/%s/Tag/%s/Imaging/%s/%s' % (patient,pipeline,step,tag,study,series)
+    def get_result_series_path(self,patient,execid,step,tag,study,series):
+       logging.debug('get_result_series_path(), patient=%s execid=%s step=%s tag=%s study=%s series=%s' % (patient,execid,step,tag,study,series))
+       path = '/Patients/%s/Results/Executions/%s/Step/%s/Tag/%s/Imaging/%s/%s' % (patient,execid,step,tag,study,series)
        return make_response(jsonify({'path':path}))
+
+#    def get_uploading_path_pipeline(self,patient,pipeline,step,tag,study,series):
+#       logging.debug('get_uploading_path_pipeline(), patient=%s pipeline=%s step=%s tag=%s study=%s series=%s' % (patient,pipeline,step,tag,study,series))
+#       path = '/Patients/%s/Results/Pipeline/%s/Step/%s/Tag/%s/Imaging/%s/%s' % (patient,pipeline,step,tag,study,series)
+#       return make_response(jsonify({'path':path}))
 
     # Routine for downloading a series.
     def retrieve_series(self,path,format):
