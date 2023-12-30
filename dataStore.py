@@ -206,9 +206,65 @@ class DataStore:
         execids = os.listdir(exec_dir)
         return make_response(jsonify({'execids':execids}))
 
+    # Get the result steps for a pipeline execution.
+    def get_result_steps(self, patient, execid):
+        logging.debug('get_result_steps(), patient=%s execid=%s' % (patient,execid))
 
+        # Make sure directory structure has: <root>/Patients/<patient>/Results/Executions/<execid>/Step.  If not, then error.
+        step_dir =  '%s/Patients/%s/Results/Executions/%s/Step' % (self.data_path,patient,execid)
+        logging.debug(step_dir)
+        if not os.path.isdir(step_dir) :
+            logging.error('invalid results path - %s' % (step_dir))
+            abort(404)
 
+        # Find the subdirectories under step_dir and organize these in a JSON structure.
+        steps = os.listdir(step_dir)
+        return make_response(jsonify({'steps':steps}))
 
+    # Get the result tags for a step in a pipeline execution.
+    def get_result_tags(self, patient, execid, step):
+        logging.debug('get_result_tags(), patient=%s execid=%s step=%s' % (patient,execid,step))
+
+        # Make sure directory structure has: <root>/Patients/<patient>/Results/Executions/<execid>/Step/<step>/Tag.  If not, then error.
+        tag_dir =  '%s/Patients/%s/Results/Executions/%s/Step/%s/Tag' % (self.data_path,patient,execid,step)
+        logging.debug(tag_dir)
+        if not os.path.isdir(tag_dir) :
+            logging.error('invalid results path - %s' % (tag_dir))
+            abort(404)
+
+        # Find the subdirectories under tag_dir and organize these in a JSON structure.
+        tags = os.listdir(tag_dir)
+        return make_response(jsonify({'tags':tags}))
+
+    # Get the result imaging studies within a tag for a step in a pipeline execution.
+    def get_result_study(self, patient, execid, step, tag):
+        logging.debug('get_result_study(), patient=%s execid=%s step=%s tag=%s' % (patient,execid,step,tag))
+
+        # Make sure directory structure has: <root>/Patients/<patient>/Results/Executions/<execid>/Step/<step>/Tag/<tag>/Imaging.  If not, then error.
+        study_dir =  '%s/Patients/%s/Results/Executions/%s/Step/%s/Tag/%s/Imaging' % (self.data_path,patient,execid,step,tag)
+        logging.debug(study_dir)
+        if not os.path.isdir(study_dir) :
+            logging.error('invalid results path - %s' % (study_dir))
+            abort(404)
+
+        # Find the subdirectories under study_dir and organize these in a JSON structure.
+        studies = os.listdir(study_dir)
+        return make_response(jsonify({'studies':studies}))
+
+    # Get the result series within an imaging study for a tag for a step in a pipeline execution.
+    def get_result_series(self, patient, execid, step, tag, study):
+        logging.debug('get_result_series(), patient=%s execid=%s step=%s tag=%s study=%s' % (patient,execid,step,tag,study))
+
+        # Make sure directory structure has: <root>/Patients/<patient>/Results/Executions/<execid>/Step/<step>/Tag/<tag>/Imaging/<study>.  If not, then error.
+        series_dir =  '%s/Patients/%s/Results/Executions/%s/Step/%s/Tag/%s/Imaging/%s' % (self.data_path,patient,execid,step,tag,study)
+        logging.debug(series_dir)
+        if not os.path.isdir(series_dir) :
+            logging.error('invalid results path - %s' % (series_dir))
+            abort(404)
+
+        # Find the subdirectories under study_dir and organize these in a JSON structure.
+        series = os.listdir(series_dir)
+        return make_response(jsonify({'series':series}))
 
     # Get the path to upload a series
     def get_uploading_path(self,patient,pipeline,execid,study):
