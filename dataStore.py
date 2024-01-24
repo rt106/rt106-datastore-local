@@ -4,7 +4,7 @@
 #
 #
 
-import glob, logging, os, sys, uuid, time
+import glob, shutil, logging, os, sys, uuid, time
 import tarfile, shutil, weakref, threading, hashlib
 import json, requests
 import boto3, botocore
@@ -316,6 +316,32 @@ class DataStore:
             abort(409)
 
         os.makedirs(upload_path)
+
+        if format != 'tar':
+            logging.error('invalid format - %s' % format)
+            abort(400)
+
+        tar_filename = upload_path+'/temp.tar'
+        file = request.files['file']
+        file.save(tar_filename)
+
+        tar = tarfile.open(tar_filename)
+        tar.extractall(path=upload_path)
+        tar.close()
+        os.remove(tar_filename)
+
+        upload_path = upload_path[(upload_path.find(self.data_path) + len(self.data_path)):]
+        return make_response(jsonify({'path': upload_path}))
+
+    def upload_series_force(self,upload_path,format):
+        upload_path = self.data_path + '/' + upload_path
+        logging.info('upload_series_force(), path=%s  format=%s' % (upload_path,format))
+        if os.path.exists(upload_path) :
+            # Delete contents of the existing upload_path.
+            shutil.rmtree(upload_path)
+        # Create the upload path if it does not exist.
+        if not os.path.exists(upload_path):
+            os.makedirs(upload_path)
 
         if format != 'tar':
             logging.error('invalid format - %s' % format)
