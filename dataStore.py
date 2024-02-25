@@ -15,6 +15,8 @@ from urllib.parse import urlparse
 from flask import Flask, jsonify, abort, request, make_response, send_file
 from flask_cors import CORS, cross_origin
 
+# BDS:  Is this set anywhere else?
+logging.basicConfig(level=logging.DEBUG)
 
 TEST_ERROR = False
 
@@ -278,7 +280,98 @@ class DataStore:
        path = '/Patients/%s/Results/Executions/%s/Step/%s/Tag/%s/Imaging/%s/%s' % (patient,execid,step,tag,study,series)
        return make_response(jsonify({'path':path}))
 
-#    def get_uploading_path_pipeline(self,patient,pipeline,step,tag,study,series):
+    # API v2 implementations
+
+    # Get the path for uploading or downloading a patient primary data element
+
+    def get_patient_data_formats(self, patient, exam, element):
+        formats_dir = '%s/Patients/%s/Primary/%s/%s' % (self.data_path, patient, exam, element)
+        # Get the directories that are under the above directory and return them in a list.
+        logging.debug(formats_dir)
+        if not os.path.isdir(formats_dir) :
+            logging.error('invalid patient exam formats path - %s' % (formats_dir))
+            abort(404)
+        # Find the subdirectories under study_dir and organize these in a JSON structure.
+        formats = os.listdir(formats_dir)
+        return make_response(jsonify({'formats':formats}))
+
+    def get_patient_data_path(self,patient,exam,element,format,study='',series=''):
+        logging.debug('get_patient_data_path(), patient=%s exam=%s element=%s format=%s' % (patient, exam, element, format))
+        format_path = '/Patients/%s/Primary/%s/%s/%s' % (patient, exam, element, format)
+        if format.lower() == 'dicom':
+            # Return the DICOM series directory, which will be under a study directory.
+            # These are passed in as arguments.
+            path = format_path + '/%s/%s' % (study,series)
+        else:
+            # Not DICOM.  The format is nifti or other single-file format.
+            path = '' # initialize as empty string
+            filename = ''
+            # See if there is one file in the path.
+            path_contents = os.listdir(self.data_path + format_path)
+            if len(path_contents) == 0:
+                # If the directory is empty, then path is the same as format_path.
+                path = format_path
+            elif len(path_contents) == 1:
+                # If there is one file in the path, append the filename to the path.
+                filename = path_contents[0]
+                path = format_path + '/' + filename
+                if not os.path.isfile(self.data_path + path):
+                    # If the content of the path is not a file, return an error.
+                    logging.error('path contains something other than a data file - %s' % (path))
+                    abort(404)
+            else:
+                # There is more than one thing in the path.
+                logging.error('path does not contain a single data file - %s' % (path))
+                abort(404)
+        return make_response(jsonify({'path':path,'filename':filename}))
+
+    # Get the path for uploading or downloading a patient derived data element
+    def get_patient_result_top_level_path(self,patient,execid,analytic):
+        logging.debug('get_patient_result_top_level_path, patient=%s execid=%s analytic=%s' % (patient, execid, analytic))
+        path = '/Patients/%s/Derived/Executions/%s/Analytics/%s/Results' % (patient, execid, analytic)
+        return make_response(jsonify({'path': path}))
+
+    def get_patient_result_data_formats(self,patient,execid,analytic,result):
+        formats_dir = '%s/Patients/%s/Derived/Executions/%s/Analytics/%s/Results/%s' % (self.data_path, patient, execid, analytic, result)
+        # Get the directories that are under the above directory and return them in a list.
+        logging.debug(formats_dir)
+        if not os.path.isdir(formats_dir) :
+            logging.error('invalid patient result formats path - %s' % (formats_dir))
+            abort(404)
+        # Find the subdirectories under study_dir and organize these in a JSON structure.
+        formats = os.listdir(formats_dir)
+        return make_response(jsonify({'formats':formats}))
+
+    def get_patient_result_data_path(self,patient,execid,analytic,result,format,study='',series=''):
+        logging.debug('get_patient_result_path, patient=%s execid=%s analytic=%s result=%s format=%s' % (patient, execid, analytic, result, format))
+        format_path = '/Patients/%s/Derived/Executions/%s/Analytics/%s/Results/%s/%s' % (patient, execid, analytic, result, format)
+        if format.lower() == 'dicom':
+            # Return the DICOM series directory, which will be under a study directory.
+            path = format_path + '/%s/%s' % (study,series)
+        else:
+            # Not DICOM.  The format is nifti or other single-file format.
+            path = '' # initialize as empty string
+            filename = ''
+            # See if there is one file in the path.
+            path_contents = os.listdir(self.data_path + format_path)
+            if len(path_contents) == 0:
+                # If the directory is empty, then path is the same as format_path.
+                path = format_path
+            elif len(path_contents) == 1:
+                # If there is one file in the path, append the filename to the path.
+                filename = path_contents[0]
+                path = format_path + '/' + filename
+                if not os.path.isfile(self.data_path + path):
+                    # If the content of the path is not a file, return an error.
+                    logging.error('path contains something other than a data file - %s' % (path))
+                    abort(404)
+            else:
+                # There is more than one thing in the path.
+                logging.error('path does not contain a single data file - %s' % (path))
+                abort(404)
+        return make_response(jsonify({'path':path,'filename':filename}))
+
+    #    def get_uploading_path_pipeline(self,patient,pipeline,step,tag,study,series):
 #       logging.debug('get_uploading_path_pipeline(), patient=%s pipeline=%s step=%s tag=%s study=%s series=%s' % (patient,pipeline,step,tag,study,series))
 #       path = '/Patients/%s/Results/Pipeline/%s/Step/%s/Tag/%s/Imaging/%s/%s' % (patient,pipeline,step,tag,study,series)
 #       return make_response(jsonify({'path':path}))
@@ -380,7 +473,7 @@ class DataStore:
     def get_instance(self,path,format):
         logging.debug('get_instance(), path=%s  format=%s' % (path,format))
         path = self.data_path + '/' + path
-        valid_formats = ['dicom', 'tif', 'tiff', 'tiff16', 'csv']
+        valid_formats = ['dicom', 'nifti', 'tif', 'tiff', 'tiff16', 'csv', 'npy']
         if format.lower() not in valid_formats:
             logging.error('invalid format - %s' % format)
             abort(400)
@@ -400,11 +493,14 @@ class DataStore:
     # Routine for uploading an instance.
     def upload_instance(self,upload_path,format):
         logging.debug('upload_instance(), path=%s  format=%s' % (upload_path,format))
+        # If upload_path includes a file, just take the directory part.
+        if not os.path.isfile(upload_path):
+            upload_path = os.path.dirname(upload_path)
         upload_path = self.data_path + '/' + upload_path
         # upload_path is merely the directory.  It is OK if it already exists.
         if not os.path.exists(upload_path):
             os.makedirs(upload_path)
-        valid_formats = ['dicom', 'tif', 'tiff', 'tiff16', 'csv']
+        valid_formats = ['dicom', 'nifti', 'tif', 'tiff', 'tiff16', 'csv', 'npy']
         if format.lower() not in valid_formats:
             logging.error('invalid format - %s' % format)
             abort(400)
@@ -419,24 +515,42 @@ class DataStore:
 
     # Routine for uploading an instance.
     def upload_instance_force(self,upload_path,format):
-        logging.debug('upload_instance_force(), path=%s  format=%s' % (upload_path,format))
+        logging.debug('upload_instance_force(), upload_path=%s  format=%s' % (upload_path,format))
         upload_path = self.data_path + '/' + upload_path
+        logging.debug('new upload_path=%s' % upload_path)
+        # If upload_path includes a file, just take the directory part.
+        if os.path.isfile(upload_path):
+            upload_path = os.path.dirname(upload_path)
+            logging.debug('modified upload_path=%s' % upload_path)
+        else:
+            logging.debug('upload_path not modified')
         if not os.path.exists(upload_path):
             os.makedirs(upload_path)
-        valid_formats = ['dicom', 'tif', 'tiff', 'tiff16', 'csv']
+            logging.debug('called os.makedirs()')
+        else:
+            logging.debug('did not call os.makedirs()')
+        valid_formats = ['dicom', 'nifti', 'tif', 'tiff', 'tiff16', 'csv', 'npy']
         if format.lower() not in valid_formats:
             logging.error('invalid format - %s' % format)
             abort(400)
         file = request.files['file']
         file_path = '%s/%s' % (upload_path,file.filename)
+        logging.debug('file_path=%s' % file_path)
         if os.path.exists(file_path):
+            logging.debug('os.path.exists True')
             # Delete the existing file.
             os.remove(file_path)
             # Make sure the upload path is still there.
             if not os.path.exists(upload_path):
+                logging.debug('calling os.makedirs() on %s' % upload_path)
                 os.makedirs(upload_path)
+            else:
+                logging.debug('not calling os.makedirs()')
+        else:
+            logging.debug('os.path.exists False')
         file.save(file_path)
         file_path = file_path[(file_path.find(self.data_path) + len(self.data_path)):]
+        logging.debug('new file_path=%s' % file_path)
         return make_response(jsonify({'path': file_path}))
 
     def get_annotation_type(self,path):
