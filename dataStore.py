@@ -15,8 +15,8 @@ from urllib.parse import urlparse
 from flask import Flask, jsonify, abort, request, make_response, send_file
 from flask_cors import CORS, cross_origin
 
-# BDS:  Is this set anywhere else?
-logging.basicConfig(level=logging.DEBUG)
+# Uncomment line below for more diagnostic output.
+#logging.basicConfig(level=logging.DEBUG)
 
 TEST_ERROR = False
 
