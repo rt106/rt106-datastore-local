@@ -193,6 +193,7 @@ class DataStore:
             paths.append(p)
         return make_response(jsonify({'files':files, 'paths':paths}))
 
+'''
     # Get the result executions for algorithm or pipeline.
     def get_result_executions(self, patient):
         logging.debug('get_result_executions(), patient=%s' % (patient))
@@ -279,6 +280,8 @@ class DataStore:
        logging.debug('get_result_series_path(), patient=%s execid=%s step=%s tag=%s study=%s series=%s' % (patient,execid,step,tag,study,series))
        path = '/Patients/%s/Results/Executions/%s/Step/%s/Tag/%s/Imaging/%s/%s' % (patient,execid,step,tag,study,series)
        return make_response(jsonify({'path':path}))
+
+'''
 
     # API v2 implementations
 
