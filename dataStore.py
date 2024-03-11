@@ -282,6 +282,28 @@ class DataStore:
 
     # API v2 implementations
 
+    def get_patient_exams(self, patient):
+        exams_dir = '%s/Patients/%s/Primary' % (self.data_path, patient)
+        # Get the directories that are under the above directory and return them in a list.
+        logging.debug(exams_dir)
+        if not os.path.isdir(exams_dir) :
+            logging.error('invalid patient exam path - %s' % (exams_dir))
+            abort(404)
+        # Find the subdirectories under study_dir and organize these in a JSON structure.
+        exams = os.listdir(exams_dir)
+        return make_response(jsonify({'exams':exams}))
+
+    def get_patient_elements(self, patient, exam):
+        elements_dir = '%s/Patients/%s/Primary/%s' % (self.data_path, patient, exam)
+        # Get the directories that are under the above directory and return them in a list.
+        logging.debug(elements_dir)
+        if not os.path.isdir(elements_dir) :
+            logging.error('invalid patient exam path - %s' % (elements_dir))
+            abort(404)
+        # Find the subdirectories under study_dir and organize these in a JSON structure.
+        elements = os.listdir(elements_dir)
+        return make_response(jsonify({'elements':elements}))
+
     # Get the path for uploading or downloading a patient primary data element
 
     def get_patient_data_formats(self, patient, exam, element):
@@ -324,6 +346,39 @@ class DataStore:
                 logging.error('path does not contain a single data file - %s' % (path))
                 abort(404)
         return make_response(jsonify({'path':path,'filename':filename}))
+
+    def get_patient_executions(self, patient):
+        execs_dir = '%s/Patients/%s/Derived/Executions' % (self.data_path, patient)
+        # Get the directories that are under the above directory and return them in a list.
+        logging.debug(execs_dir)
+        if not os.path.isdir(execs_dir) :
+            logging.error('invalid patient exam path - %s' % (execs_dir))
+            abort(404)
+        # Find the subdirectories under study_dir and organize these in a JSON structure.
+        executions = os.listdir(execs_dir)
+        return make_response(jsonify({'executions':executions}))
+
+    def get_patient_analytics(self, patient, execid):
+        analytics_dir = '%s/Patients/%s/Derived/Executions/%s/Analytics' % (self.data_path, patient, execid)
+        # Get the directories that are under the above directory and return them in a list.
+        logging.debug(analytics_dir)
+        if not os.path.isdir(analytics_dir) :
+            logging.error('invalid patient exam path - %s' % (analytics_dir))
+            abort(404)
+        # Find the subdirectories under study_dir and organize these in a JSON structure.
+        analytics = os.listdir(analytics_dir)
+        return make_response(jsonify({'analytics':analytics}))
+
+    def get_patient_results(self, patient, execid, analytic):
+        results_dir = '%s/Patients/%s/Derived/Executions/%s/Analytics/%s/Results' % (self.data_path, patient, execid, analytic)
+        # Get the directories that are under the above directory and return them in a list.
+        logging.debug(results_dir)
+        if not os.path.isdir(results_dir) :
+            logging.error('invalid patient exam path - %s' % (results_dir))
+            abort(404)
+        # Find the subdirectories under study_dir and organize these in a JSON structure.
+        results = os.listdir(results_dir)
+        return make_response(jsonify({'results':results}))
 
     # Get the path for uploading or downloading a patient derived data element
     def get_patient_result_top_level_path(self,patient,execid,analytic):
