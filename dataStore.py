@@ -212,7 +212,7 @@ class DataStore:
         # Get the directories that are under the above directory and return them in a list.
         logging.debug(elements_dir)
         if not os.path.isdir(elements_dir) :
-            logging.error('invalid patient exam path - %s' % (elements_dir))
+            logging.error('invalid patient exam/elements path - %s' % (elements_dir))
             abort(404)
         # Find the subdirectories under study_dir and organize these in a JSON structure.
         elements = os.listdir(elements_dir)
@@ -243,22 +243,26 @@ class DataStore:
             path = '' # initialize as empty string
             filename = ''
             # See if there is one file in the path.
-            path_contents = os.listdir(self.data_path + format_path)
-            if len(path_contents) == 0:
-                # If the directory is empty, then path is the same as format_path.
+            if not os.path.isdir(self.data_path + format_path):
+                # If the directory does not yet exist in the datastore, then path is the same as format_path.
                 path = format_path
-            elif len(path_contents) == 1:
-                # If there is one file in the path, append the filename to the path.
-                filename = path_contents[0]
-                path = format_path + '/' + filename
-                if not os.path.isfile(self.data_path + path):
-                    # If the content of the path is not a file, return an error.
-                    logging.error('path contains something other than a data file - %s' % (path))
-                    abort(404)
             else:
-                # There is more than one thing in the path.
-                logging.error('path does not contain a single data file - %s' % (path))
-                abort(404)
+                path_contents = os.listdir(self.data_path + format_path)
+                if len(path_contents) == 0:
+                    # If the directory is empty, then path is the same as format_path.
+                    path = format_path
+                elif len(path_contents) == 1:
+                    # If there is one file in the path, append the filename to the path.
+                    filename = path_contents[0]
+                    path = format_path + '/' + filename
+                    if not os.path.isfile(self.data_path + path):
+                        # If the content of the path is not a file, return an error.
+                        logging.error('path contains something other than a data file - %s' % (path))
+                        abort(404)
+                else:
+                    # There is more than one thing in the path.
+                    logging.error('path does not contain a single data file - %s' % (format_path))
+                    abort(404)
         return make_response(jsonify({'path':path,'filename':filename}))
 
     def get_patient_executions(self, patient):
@@ -322,22 +326,26 @@ class DataStore:
             path = '' # initialize as empty string
             filename = ''
             # See if there is one file in the path.
-            path_contents = os.listdir(self.data_path + format_path)
-            if len(path_contents) == 0:
-                # If the directory is empty, then path is the same as format_path.
+            if not os.path.isdir(self.data_path + format_path):
+                # If the directory does not yet exist in the datastore, then path is the same as format_path.
                 path = format_path
-            elif len(path_contents) == 1:
-                # If there is one file in the path, append the filename to the path.
-                filename = path_contents[0]
-                path = format_path + '/' + filename
-                if not os.path.isfile(self.data_path + path):
-                    # If the content of the path is not a file, return an error.
-                    logging.error('path contains something other than a data file - %s' % (path))
-                    abort(404)
             else:
-                # There is more than one thing in the path.
-                logging.error('path does not contain a single data file - %s' % (path))
-                abort(404)
+                path_contents = os.listdir(self.data_path + format_path)
+                if len(path_contents) == 0:
+                    # If the directory is empty, then path is the same as format_path.
+                    path = format_path
+                elif len(path_contents) == 1:
+                    # If there is one file in the path, append the filename to the path.
+                    filename = path_contents[0]
+                    path = format_path + '/' + filename
+                    if not os.path.isfile(self.data_path + path):
+                        # If the content of the path is not a file, return an error.
+                        logging.error('path contains something other than a data file - %s' % (path))
+                        abort(404)
+                else:
+                    # There is more than one thing in the path.
+                    logging.error('path does not contain a single data file - %s' % (format_path))
+                    abort(404)
         return make_response(jsonify({'path':path,'filename':filename}))
 
     #    def get_uploading_path_pipeline(self,patient,pipeline,step,tag,study,series):
