@@ -477,7 +477,7 @@ class DataStore:
         # upload_path is merely the directory.  It is OK if it already exists.
         if not os.path.exists(upload_path):
             os.makedirs(upload_path)
-        valid_formats = ['dicom', 'nifti', 'tif', 'tiff', 'tiff16', 'csv', 'npy']
+        valid_formats = ['dicom', 'nifti', 'nii', 'tif', 'tiff', 'tiff16', 'csv', 'npy']
         if format.lower() not in valid_formats:
             logging.error('invalid format - %s' % format)
             abort(400)
@@ -506,7 +506,7 @@ class DataStore:
             logging.debug('called os.makedirs()')
         else:
             logging.debug('did not call os.makedirs()')
-        valid_formats = ['dicom', 'nifti', 'tif', 'tiff', 'tiff16', 'csv', 'npy']
+        valid_formats = ['dicom', 'nifti', 'nii', 'tif', 'tiff', 'tiff16', 'csv', 'npy']
         if format.lower() not in valid_formats:
             logging.error('invalid format - %s' % format)
             abort(400)
