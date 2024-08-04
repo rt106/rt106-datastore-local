@@ -20,6 +20,8 @@ from flask_cors import CORS, cross_origin
 
 TEST_ERROR = False
 
+VALID_FORMATS = ['dicom', 'nifti', 'nii', 'tif', 'tiff', 'tiff16', 'jpeg', 'csv', 'npy', 'npz']
+
 class DataStore:
     def __init__(self):
         self.data_path = os.environ['DATASTORE_LOCAL_DATA_PATH'] if 'DATASTORE_LOCAL_DATA_PATH' in os.environ else '/rt106/data'
@@ -292,10 +294,26 @@ class DataStore:
         # Get the directories that are under the above directory and return them in a list.
         logging.debug(results_dir)
         if not os.path.isdir(results_dir) :
-            logging.error('invalid patient exam path - %s' % (results_dir))
+            logging.error('invalid patient result path - %s' % (results_dir))
             abort(404)
+
         # Find the subdirectories under study_dir and organize these in a JSON structure.
-        results = os.listdir(results_dir)
+        #results = os.listdir(results_dir)
+
+        # Traverse all the subdirectories under results_dir, down to the level of formats.
+        results = []
+        try:
+            L = [(root, dirs, files) for root, dirs, files, in os.walk(results_dir)]
+            for i in L:
+                if len(i[1]) > 0 and i[1][0] in VALID_FORMATS:
+                    result = i[0].replace(results_dir, '') # Remove root directory prefix.
+                    result = result.replace('\\', '/')     # Replace backslashes with forward slashes.
+                    result = result[1:]                    # Remove initial slash.
+                    results.append(result)
+        except:
+            logging.error('error traversing results hierarchy in %s' % (results_dir))
+            abort(400)
+
         return make_response(jsonify({'results':results}))
 
     # Get the path for uploading or downloading a patient derived data element
@@ -437,12 +455,12 @@ class DataStore:
             logging.error('invalid instance - %s' %  path)
             abort(404)
         type = None
-        supported_types = ['tiff', 'tiff16', 'csv', 'jpeg']
+        #supported_types = ['tiff', 'tiff16', 'csv', 'jpeg']
         filename, extension = os.path.splitext(path)
         type = extension[1:].lower()
         if type == 'tif' or type == 'tiff':
             type = 'tiff16'
-        elif type not in supported_types:
+        elif type not in VALID_FORMATS:
             type = 'DICOM'
         return make_response(jsonify({'type': type}))
 
@@ -450,8 +468,8 @@ class DataStore:
     def get_instance(self,path,format):
         logging.debug('get_instance(), path=%s  format=%s' % (path,format))
         path = self.data_path + '/' + path
-        valid_formats = ['dicom', 'nifti', 'tif', 'tiff', 'tiff16', 'csv', 'npy']
-        if format.lower() not in valid_formats:
+        #valid_formats = ['dicom', 'nifti', 'nii', 'tif', 'tiff', 'tiff16', 'csv', 'npy', 'npz']
+        if format.lower() not in VALID_FORMATS:
             logging.error('invalid format - %s' % format)
             abort(400)
 
@@ -477,8 +495,8 @@ class DataStore:
         # upload_path is merely the directory.  It is OK if it already exists.
         if not os.path.exists(upload_path):
             os.makedirs(upload_path)
-        valid_formats = ['dicom', 'nifti', 'nii', 'tif', 'tiff', 'tiff16', 'csv', 'npy', 'npz']
-        if format.lower() not in valid_formats:
+        #valid_formats = ['dicom', 'nifti', 'nii', 'tif', 'tiff', 'tiff16', 'csv', 'npy', 'npz']
+        if format.lower() not in VALID_FORMATS:
             logging.error('invalid format - %s' % format)
             abort(400)
         file = request.files['file']
@@ -506,8 +524,8 @@ class DataStore:
             logging.debug('called os.makedirs()')
         else:
             logging.debug('did not call os.makedirs()')
-        valid_formats = ['dicom', 'nifti', 'nii', 'tif', 'tiff', 'tiff16', 'csv', 'npy', 'npz']
-        if format.lower() not in valid_formats:
+        #valid_formats = ['dicom', 'nifti', 'nii', 'tif', 'tiff', 'tiff16', 'csv', 'npy', 'npz']
+        if format.lower() not in VALID_FORMATS:
             logging.error('invalid format - %s' % format)
             abort(400)
         file = request.files['file']
